@@ -99,6 +99,10 @@ void Graph::insertNode(int id) {
 }
 
 Node *Graph::allocateNode(int id) {
+    /*******************************************************************************************************************
+     * método similar ao insertNode(), se difere ao retornar o nó alocado. Assim tendo como objetivo retornar o nó
+     * para que ele possa ser utilizado imediatamente e não haja necessidade de busca-lo no grafo.
+     * ****************************************************************************************************************/
     if (this->getFirstNode() == nullptr) {
         this->first_node = this->last_node = new Node(id);
         return this->first_node;
@@ -162,6 +166,11 @@ bool Graph::containsEdge(int id, int target_id) {
 }
 
 void Graph::removeNode(int id) {
+    /*******************************************************************************************************************
+     * método utilizado para remover um nó do grafo.
+     * parameters:
+     *      id: id do nó que será removido do grafo
+     * ****************************************************************************************************************/
     if (this->containsNode(id)) {
         Node *node = this->getNode(id);
         Edge *edge = node->getFirstEdge();
@@ -264,6 +273,11 @@ float *Graph::dijkstra(int id) {
 }
 
 void Graph::generateDot(string name_graph) {
+    /*******************************************************************************************************************
+     * método utilizado para gerar o arquivo "*.dot".
+     * parameters:
+     *      name_graph: string utilizada como nome do arquivo que será gerado
+     * ****************************************************************************************************************/
     string path = "../output_files/";
     path.append(name_graph).append("_graph.dot");
     fstream output_file;

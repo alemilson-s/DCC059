@@ -49,7 +49,7 @@ class Node{
         Edge* hasEdgeBetween(int target_id);
         // Auxiliar methods
         bool containsEdge(int edge_id);
-        void removeSecondEdge(Node *node, int edge_id);
+        void auxRemoveEdge(Node *node, int id_edge);
 
 };
 

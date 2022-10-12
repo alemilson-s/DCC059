@@ -19,7 +19,7 @@ Node::Node(int id) {
     this->last_edge = nullptr;
     this->next_node = nullptr;
 
-};
+}
 
 // Destructor
 Node::~Node() {
@@ -34,7 +34,7 @@ Node::~Node() {
 
     }
 
-};
+}
 
 // Getters
 Edge *Node::getFirstEdge() {
@@ -114,6 +114,9 @@ void Node::insertEdge(int target_id, float weight) {
 }
 
 void Node::removeAllEdges() {
+    /*******************************************************************************************************************
+     * método utilizado para remover todas arestas de um nó, é utilizado pelo destrutor.
+     * ****************************************************************************************************************/
     // Verifies whether there are at least one edge in the node
     if (this->first_edge != nullptr) {
 
@@ -133,11 +136,17 @@ void Node::removeAllEdges() {
 
 }
 
-void Node::removeSecondEdge(Node *node, int id) {
+void Node::auxRemoveEdge(Node *node, int id_edge) {
+    /*******************************************************************************************************************
+     * O método remove uma aresta adjacente a um nó
+     * parameters:
+     *      *node: ponteiro para o nó que terá aresta removida
+     *      id_edge: id da aresta que removida
+     * ****************************************************************************************************************/
     Edge *aux = node->first_edge;
     Edge *previous = nullptr;
     // Searching for the edge to be removed
-    while (aux->getTargetId() != id) {
+    while (aux->getTargetId() != id_edge) {
 
         previous = aux;
         aux = aux->getNextEdge();
@@ -152,7 +161,7 @@ void Node::removeSecondEdge(Node *node, int id) {
 
     if (aux == node->last_edge)
         node->last_edge = previous;
-    
+
     if (aux->getNextEdge() == node->last_edge)
         node->last_edge = aux->getNextEdge();
     aux->setNextEdge(nullptr);
@@ -161,36 +170,21 @@ void Node::removeSecondEdge(Node *node, int id) {
 }
 
 int Node::removeEdge(bool directed, Node *target_node) {
+    /*******************************************************************************************************************
+     * o método remove aresta adjacente a nós ou arcos, é utilizado para controlar a remoção de arestas em nós adjacentes
+     * no caso de o grafo não ser direcionado, onde a aresta terá remoção na lista de adjacência de ambos nós.
+     * parameters:
+     *      directed: indica se o nó está em grafo direcionado
+     *      *target_node: ponteiro para o nó adjacente ao objeto
+     ******************************************************************************************************************/
     // Verifies whether the edge to remove is in the node
     if (this->containsEdge(target_node->getId())) {
-        Edge *aux = this->first_edge;
-        Edge *previous = nullptr;
-        // Searching for the edge to be removed
-        while (aux->getTargetId() != target_node->getId()) {
-
-            previous = aux;
-            aux = aux->getNextEdge();
-
-        }
-        // Keeping the integrity of the edge list
-        if (previous != nullptr)
-            previous->setNextEdge(aux->getNextEdge());
-
-        else
-            this->first_edge = aux->getNextEdge();
-
-        if (aux == this->last_edge)
-            this->last_edge = previous;
-
-        if (aux->getNextEdge() == this->last_edge)
-            this->last_edge = aux->getNextEdge();
-        // Verifies whether the graph is directed
-
+        auxRemoveEdge(this, target_node->getId());
         if (directed) {
             this->decrementOutDegree();
             target_node->decrementInDegree();
         } else {
-            removeSecondEdge(target_node, this->getId());
+            auxRemoveEdge(target_node, this->getId());
             this->decrementInDegree();
             target_node->decrementInDegree();
 
@@ -198,8 +192,6 @@ int Node::removeEdge(bool directed, Node *target_node) {
             target_node->decrementOutDegree();
 
         }
-        aux->setNextEdge(nullptr);
-        delete aux;
 
         return 1;
 
@@ -257,6 +249,13 @@ Edge *Node::hasEdgeBetween(int target_id) {
 }
 
 bool Node::containsEdge(int edge_id) {
+    /*******************************************************************************************************************
+     * método utilizado para verificar se uma determinada aresta está contida no conjunto de arestas do nó.
+     * parameters:
+     *      edge_id: id da aresta que será analisada pelo método
+     * return:
+     *      retorna verdadeiro se a aresta estiver contida no conjunto de arestas do nó, falso caso contrário
+    *******************************************************************************************************************/
     Edge *edge = this->first_edge;
     while (edge != nullptr) {
         if (edge->getTargetId() == edge_id) {

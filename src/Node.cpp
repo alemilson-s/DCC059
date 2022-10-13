@@ -79,6 +79,17 @@ Node *Node::getNextNode() {
 
 }
 
+Edge *Node::getEdge(int target_id) {
+    Edge *edge = this->getFirstEdge();
+    while (edge != nullptr) {
+        if (edge->getTargetId() == target_id) {
+            return edge;
+        }
+        edge = edge->getNextEdge();
+    }
+    return nullptr;
+}
+
 // Setters
 
 void Node::setNextNode(Node *next_node) {

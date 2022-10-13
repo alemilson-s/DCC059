@@ -85,26 +85,32 @@ Node *Graph::getLastNode() {
     The outdegree attribute of nodes is used as a counter for the number of edges in the graph.
     This allows the correct updating of the numbers of edges in the graph being directed or not.
 */
-void Graph::insertNode(int id) {
+void Graph::insertNode(int id, bool update_order) {
     if (this->getFirstNode() == nullptr) {
         this->first_node = this->last_node = new Node(id);
+        if (update_order)
+            this->order++;
     } else {
         if (!this->containsNode(id)) {
             Node *p = new Node(id);
             this->last_node->setNextNode(p);
             this->last_node = p;
             this->last_node->setNextNode(nullptr);
+            if (update_order)
+                this->order++;
         }
     }
 }
 
-Node *Graph::allocateNode(int id) {
+Node *Graph::allocateNode(int id, bool update_order) {
     /*******************************************************************************************************************
      * método similar ao insertNode(), se difere ao retornar o nó alocado. Assim tendo como objetivo retornar o nó
      * para que ele possa ser utilizado imediatamente e não haja necessidade de busca-lo no grafo.
      * ****************************************************************************************************************/
     if (this->getFirstNode() == nullptr) {
         this->first_node = this->last_node = new Node(id);
+        if (update_order)
+            this->order++;
         return this->first_node;
     } else {
         if (!this->containsNode(id)) {
@@ -112,6 +118,8 @@ Node *Graph::allocateNode(int id) {
             this->last_node->setNextNode(p);
             this->last_node = p;
             this->last_node->setNextNode(nullptr);
+            if (update_order)
+                this->order++;
             return this->last_node;
         }
     }
@@ -119,15 +127,17 @@ Node *Graph::allocateNode(int id) {
 }
 
 void Graph::insertEdge(int id, int target_id, float weight) {
+    if (id == target_id)
+        return;
     Node *node;
     Node *target_node;
     if (!this->containsNode(id)) {
-        node = this->allocateNode(id);
+        node = this->allocateNode(id, false);
     } else {
         node = this->getNode(id);
     }
     if (!this->containsNode(target_id)) {
-        target_node = this->allocateNode(target_id);
+        target_node = this->allocateNode(target_id, false);
     } else {
         target_node = this->getNode(target_id);
     }
@@ -270,6 +280,85 @@ float **Graph::floydMarshall() {
 
 float *Graph::dijkstra(int id) {
     return 0;
+}
+
+
+Graph *Graph::getVertexInducedSubgraph() {
+    Graph *g = new Graph(0, this->directed, this->weighted_edge, this->weighted_node);
+    int number_vertices, id_vertex, *vet, index_vet = 0;
+    cout << "Quantidade de vértices: ";
+    cin >> number_vertices;
+    while (number_vertices > this->order) {
+        cout << "A ordem do subgrafo vértice induzido deve ser menor ou igual a do supergrafo!" << endl;
+        cout << "Digite novamente." << endl << "Quantidade de vértices: ";
+        cin >> number_vertices;
+    }
+
+    vet = new int[number_vertices];
+
+    cout
+            << "Digite \"(S) ou (s)\" para fazer a leitura a partir de um arquivo, qualquer outro valor para leitura manual: ";
+    string resp;
+    cin >> resp;
+    if (std::equal(resp.begin(), resp.end(), "S") || std::equal(resp.begin(), resp.end(), "s")) {
+        cout << "Digite o caminho absoluto do arquivo: ";
+        string path;
+        cin >> path;
+        ifstream file;
+        file.open(path, ios::in);
+        if (!file.is_open()) {
+            while (!file.is_open()) {
+                cout << "Não foi possível abrir o arquivo!" << endl;
+                cout << "Tente novamente." << endl;
+                cout << "Digite o caminho absoluto do arquivo: ";
+                cin >> path;
+                file.open(path, ios::in);
+            }
+        }
+        int i = 0;
+        while (file >> vet[i] && i < number_vertices) {
+            Node *node = this->getNode(vet[i]);
+            while (node == nullptr || g->containsNode(vet[i])) {
+                cout << "Nó inexistente, ou já está contido no grafo!" << endl << "Digite outro nó." << endl;
+                cout << "Id " << i + 1 << "o vértice: ";
+                cin >> vet[i];
+                node = this->getNode(vet[i]);
+            }
+            vet[index_vet] = vet[i];
+            index_vet++;
+            Node *p = g->allocateNode(vet[i], true);
+            p->setWeight(node->getWeight());
+            i++;
+        }
+        file.close();
+    } else {
+        for (int i = 0; i < number_vertices; i++) {
+            cout << "Id " << i + 1 << "o vértice: ";
+            cin >> id_vertex;
+            Node *node = this->getNode(id_vertex);
+            while (node == nullptr || g->containsNode(id_vertex)) {
+                cout << "Nó inexistente, ou já está contido no grafo!" << endl << "Digite novamente." << endl;
+                cout << "Id " << i + 1 << "o vértice: ";
+                cin >> id_vertex;
+                node = this->getNode(id_vertex);
+            }
+            vet[index_vet] = id_vertex;
+            index_vet++;
+            Node *p = g->allocateNode(id_vertex, true);
+            p->setWeight(node->getWeight());
+        }
+    }
+
+    for (Node *p = g->getFirstNode(); p != nullptr; p = p->getNextNode()) {
+        Node *node = this->getNode(p->getId());
+        for (int i = 0; i < number_vertices; i++) {
+            Edge *edge = node->getEdge(vet[i]);
+            if (edge != nullptr)
+                p->insertEdge(vet[i], edge->getWeight());
+        }
+    }
+    delete[]vet;
+    return g;
 }
 
 void Graph::generateDot(string name_graph) {

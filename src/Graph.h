@@ -37,7 +37,7 @@ class Graph{
         Node* getFirstNode();
         Node* getLastNode();
         //Other methods
-        void insertNode(int id);
+        void insertNode(int id, bool update_order);
         void insertEdge(int id, int target_id, float weight);
         void removeNode(int id);
         bool containsNode(int id);
@@ -52,11 +52,12 @@ class Graph{
         float* dijkstra(int id);
         void generateDot(string name_graph);
         void removeEdge(int id, int target_id);
+        Graph* getVertexInducedSubgraph();
 
     private:
         //Auxiliar methods
         bool containsEdge(int id, int target_id);
-        Node* allocateNode(int id);
+        Node* allocateNode(int id, bool update_order);
 
 };
 

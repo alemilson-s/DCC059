@@ -285,7 +285,7 @@ float *Graph::dijkstra(int id) {
 
 Graph *Graph::getVertexInducedSubgraph() {
     Graph *g = new Graph(0, this->directed, this->weighted_edge, this->weighted_node);
-    int number_vertices, id_vertex, *vet, index_vet = 0;
+    int number_vertices, id_vertex, *vet;
     cout << "Quantidade de vértices: ";
     cin >> number_vertices;
     while (number_vertices > this->order) {
@@ -324,8 +324,6 @@ Graph *Graph::getVertexInducedSubgraph() {
                 cin >> vet[i];
                 node = this->getNode(vet[i]);
             }
-            vet[index_vet] = vet[i];
-            index_vet++;
             Node *p = g->allocateNode(vet[i], true);
             p->setWeight(node->getWeight());
             i++;
@@ -342,8 +340,7 @@ Graph *Graph::getVertexInducedSubgraph() {
                 cin >> id_vertex;
                 node = this->getNode(id_vertex);
             }
-            vet[index_vet] = id_vertex;
-            index_vet++;
+            vet[i] = id_vertex;
             Node *p = g->allocateNode(id_vertex, true);
             p->setWeight(node->getWeight());
         }
@@ -371,6 +368,11 @@ void Graph::generateDot(string name_graph) {
     path.append(name_graph).append("_graph.dot");
     fstream output_file;
     output_file.open(path, ios::out);
+    if (!output_file.is_open()) {
+        path = "./output_files/";
+        path.append(name_graph).append("_graph.dot");
+        output_file.open(path, ios::out);
+    }
 
     if (output_file.is_open()) {
         if (this->directed) {
@@ -403,7 +405,7 @@ void Graph::generateDot(string name_graph) {
             }
             output_file << "}";
         }
-
+        cout << "Arquivo " << path << " gerado!" << endl;
         name_graph.append("_graph.png");
 
         string command = "dot -Tpng ";
@@ -420,6 +422,6 @@ void Graph::generateDot(string name_graph) {
         output_file.close();
 
     } else {
-        cout << "An error occurred while trying to open the file!" << endl;
+        cout << "An error occurred while trying to open the file!" << endl << "generateDot()" << endl;
     }
 }

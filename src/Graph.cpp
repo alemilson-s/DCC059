@@ -419,8 +419,10 @@ void Graph::visitNode(int id, int *colors, list<int> *executionOrder, int *time)
         Node *aux = this->getNode(t->getTargetId());
         if (colors[aux->getObjectId()] == WHITE)
             visitNode(aux->getObjectId(), colors, executionOrder, time);
-        if (colors[aux->getObjectId()] == YELLOW)
-            cout << "ciclo!" << endl;
+        if (colors[aux->getObjectId()] == YELLOW) {
+            cout << "Grafo possui ciclo!" << endl;
+            exit(55);
+        }
         t = t->getNextEdge();
     }
     colors[id] = RED;

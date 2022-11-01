@@ -15,6 +15,7 @@ class Node{
     private:
         Edge* first_edge;
         Edge* last_edge;
+        unsigned int object_id;
         int id;
         unsigned int in_degree;
         unsigned int out_degree;
@@ -24,6 +25,7 @@ class Node{
     public:
         // Constructor
         Node(int id);
+        Node();
         // Destructor
         ~Node();
         // Getters
@@ -35,9 +37,11 @@ class Node{
         float getWeight();
         Node* getNextNode();
         Edge* getEdge(int target_id);
+        unsigned int getObjectId();
         // Setters
         void setNextNode(Node* node);
         void setWeight(float weight);
+        void setObjectId(unsigned int object_id);
         // Other methods
         bool searchEdge(int target_id);
         void insertEdge(int target_id, float weight);

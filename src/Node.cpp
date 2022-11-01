@@ -90,12 +90,20 @@ Edge *Node::getEdge(int target_id) {
     return nullptr;
 }
 
+unsigned int Node::getObjectId() {
+    return this->object_id;
+}
+
 // Setters
 
 void Node::setNextNode(Node *next_node) {
 
     this->next_node = next_node;
 
+}
+
+void Node::setObjectId(unsigned int object_id) {
+    this->object_id = object_id;
 }
 
 void Node::setWeight(float weight) {
@@ -166,7 +174,6 @@ void Node::auxRemoveEdge(Node *node, int id_edge) {
     // Keeping the integrity of the edge list
     if (previous != nullptr)
         previous->setNextEdge(aux->getNextEdge());
-
     else
         node->first_edge = aux->getNextEdge();
 

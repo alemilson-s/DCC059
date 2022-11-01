@@ -210,7 +210,6 @@ int mainMenu(ofstream &output_file, Graph *graph) {
     return 0;
 }
 
-
 int main(int argc, char const *argv[]) {
 
     //Verificação se todos os parâmetros do programa foram entrados
@@ -247,8 +246,7 @@ int main(int argc, char const *argv[]) {
 //    mainMenu(output_file, graph);
 
     graph->generateDot("g");
-    Graph *h = graph->getVertexInducedSubgraph();
-    h->generateDot("h");
+    graph->closeNetwork();
     //Fechando arquivo de entrada
     input_file.close();
 

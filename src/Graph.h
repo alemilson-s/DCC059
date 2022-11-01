@@ -22,6 +22,7 @@ class Graph{
         bool weighted_node;
         Node* first_node;
         Node* last_node;
+        int id_s;
 
     public:
         //Constructor
@@ -36,6 +37,7 @@ class Graph{
         bool getWeightedNode();
         Node* getFirstNode();
         Node* getLastNode();
+        Node *getNodeObjectId(unsigned int id);
         //Other methods
         void insertNode(int id, bool update_order);
         void insertEdge(int id, int target_id, float weight);
@@ -53,6 +55,12 @@ class Graph{
         void generateDot(string name_graph);
         void removeEdge(int id, int target_id);
         Graph* getVertexInducedSubgraph();
+        void depthSearch();
+        void visitNode(int id, int *colors);
+        int *getIndirectTransitiveClosure(int id_node);
+        Graph *intersection(Graph *g);
+        void closeNetwork();
+        void visitNode(int id, int *colors, list<int> *executionOrder, int *time);
 
     private:
         //Auxiliar methods

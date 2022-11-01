@@ -12,6 +12,10 @@
 #include <float.h>
 #include <iomanip>
 
+#define WHITE 0
+#define YELLOW 1
+#define RED 2
+
 using namespace std;
 
 /**************************************************************************************************
@@ -27,6 +31,7 @@ Graph::Graph(int order, bool directed, bool weighted_edge, bool weighted_node) {
     this->weighted_node = weighted_node;
     this->first_node = this->last_node = nullptr;
     this->number_edges = 0;
+    this->id_s = 0;
 }
 
 // Destructor
@@ -80,6 +85,16 @@ Node *Graph::getLastNode() {
     return this->last_node;
 }
 
+Node *Graph::getNodeObjectId(unsigned int id) {
+    Node *p = this->first_node;
+    while (p != nullptr) {
+        if (p->getObjectId() == id)
+            return p;
+        p = p->getNextNode();
+    }
+    return nullptr;
+}
+
 // Other methods
 /*
     The outdegree attribute of nodes is used as a counter for the number of edges in the graph.
@@ -90,9 +105,13 @@ void Graph::insertNode(int id, bool update_order) {
         this->first_node = this->last_node = new Node(id);
         if (update_order)
             this->order++;
+        this->first_node->setObjectId(this->id_s);
+        id_s++;
     } else {
         if (!this->containsNode(id)) {
             Node *p = new Node(id);
+            p->setObjectId(this->id_s);
+            id_s++;
             this->last_node->setNextNode(p);
             this->last_node = p;
             this->last_node->setNextNode(nullptr);
@@ -111,10 +130,14 @@ Node *Graph::allocateNode(int id, bool update_order) {
         this->first_node = this->last_node = new Node(id);
         if (update_order)
             this->order++;
+        this->first_node->setObjectId(this->id_s);
+        id_s++;
         return this->first_node;
     } else {
         if (!this->containsNode(id)) {
             Node *p = new Node(id);
+            p->setObjectId(this->id_s);
+            id_s++;
             this->last_node->setNextNode(p);
             this->last_node = p;
             this->last_node->setNextNode(nullptr);
@@ -358,6 +381,111 @@ Graph *Graph::getVertexInducedSubgraph() {
     return g;
 }
 
+void Graph::visitNode(int id, int *colors) {
+    colors[id] = YELLOW;
+    Node *p = this->getNodeObjectId(id);
+    Edge *t = nullptr;
+    if (p != nullptr)
+        t = p->getFirstEdge();
+    while (t != nullptr) {
+        Node *aux = this->getNode(t->getTargetId());
+        if (colors[aux->getObjectId()] == WHITE)
+            visitNode(aux->getObjectId(), colors);
+        t = t->getNextEdge();
+    }
+    colors[id] = RED;
+}
+
+void Graph::depthSearch() {
+    int colors[this->order];
+
+    for (int i = 0; i < this->order; i++)
+        colors[i] = WHITE;
+    for (int i = 0; i < this->order; i++) {
+        if (colors[i] == WHITE) {
+            visitNode(i, colors);
+        }
+    }
+}
+
+void Graph::visitNode(int id, int *colors, list<int> *executionOrder, int *time) {
+    colors[id] = YELLOW;
+    Node *p = this->getNodeObjectId(id);
+    Edge *t = nullptr;
+    if (p != nullptr)
+        t = p->getFirstEdge();
+    while (t != nullptr) {
+        *time += t->getWeight();
+        Node *aux = this->getNode(t->getTargetId());
+        if (colors[aux->getObjectId()] == WHITE)
+            visitNode(aux->getObjectId(), colors, executionOrder, time);
+        if (colors[aux->getObjectId()] == YELLOW)
+            cout << "ciclo!" << endl;
+        t = t->getNextEdge();
+    }
+    colors[id] = RED;
+    executionOrder->push_front(id);
+}
+
+void Graph::closeNetwork() {
+    if (!this->directed) {
+        cout << "Grafo deve ser direcionado!" << endl;
+        return;
+    }
+    int time = 0;
+    int colors[this->order];
+    list<int> executionOrder;
+
+    for (int i = 0; i < this->order; i++)
+        colors[i] = WHITE;
+    for (int i = 0; i < this->order; i++) {
+        if (colors[i] == WHITE) {
+            visitNode(i, colors, &executionOrder, &time);
+        }
+    }
+
+    list<int>::iterator it;
+    for (it = executionOrder.begin(); it != executionOrder.end(); it++)
+        cout << "-> etapa: " << this->getNodeObjectId(*it)->getId() << endl;
+    cout << "Duração do projeto: " << time << endl;
+}
+
+int *Graph::getIndirectTransitiveClosure(int id_node) {
+    Node *node = this->getFirstNode();
+    int *vet = new int[this->order], i;
+    for (i = 0; i < this->order; i++)
+        vet[i] = -1;
+    i = 0;
+    while (node != nullptr) {
+        if (node->containsEdge(id_node)) {
+            vet[i] = node->getId();
+            i++;
+        }
+        node = node->getNextNode();
+    }
+    return vet;
+}
+
+Graph *Graph::intersection(Graph *g) {
+    Graph *p = new Graph(0, this->directed, this->weighted_edge, this->weighted_node);
+    Node *node = this->getFirstNode();
+    while (node != nullptr) {
+        if (g->containsNode(node->getId())) {
+            Node *n = p->allocateNode(node->getId(), true);
+            n->setWeight(node->getWeight());
+            Edge *t = node->getFirstEdge();
+            while (t != nullptr) {
+                if (node->containsEdge(t->getTargetId())) {
+                    n->insertEdge(t->getTargetId(), t->getWeight());
+                }
+                t = t->getNextEdge();
+            }
+        }
+        node = node->getNextNode();
+    }
+    return p;
+}
+
 void Graph::generateDot(string name_graph) {
     /*******************************************************************************************************************
      * método utilizado para gerar o arquivo "*.dot".
@@ -406,6 +534,7 @@ void Graph::generateDot(string name_graph) {
             output_file << "}";
         }
         cout << "Arquivo " << path << " gerado!" << endl;
+        /*
         name_graph.append("_graph.png");
 
         string command = "dot -Tpng ";
@@ -419,6 +548,7 @@ void Graph::generateDot(string name_graph) {
 
             exit(1);
         }
+         */
         output_file.close();
 
     } else {

@@ -463,6 +463,8 @@ void Graph::closeNetwork() {
     for (it = execution->path.begin(); it != execution->path.end(); it++)
         cout << "-> etapa: " << this->getNodeObjectId(*it)->getId() << endl;
     cout << "Duração do projeto: " << execution->weight << endl;
+    delete execution;
+    delete []visits;
 }
 
 int *Graph::getIndirectTransitiveClosure(int id_node) {

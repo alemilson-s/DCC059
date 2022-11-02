@@ -412,10 +412,12 @@ void
 Graph::visitNode(int id, int *colors, int time, int accumulated_time, list<int> path, executionPath *execution, int *visits) {
     colors[id] = YELLOW;
     Node *p = this->getNodeObjectId(id);
-    visits[p->getObjectId()]++;
     Edge *t = nullptr;
     if (p != nullptr)
         t = p->getFirstEdge();
+    else
+        return;
+    visits[p->getObjectId()]++;
     accumulated_time += time;
     path.push_back(id);
     if (execution->weight < accumulated_time) {

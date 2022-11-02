@@ -246,7 +246,12 @@ int main(int argc, char const *argv[]) {
 //    mainMenu(output_file, graph);
 
     graph->generateDot("g");
-    graph->closeNetwork();
+    graph->pertNetwork();
+    Graph *p = graph->getVertexInducedSubgraph();
+    p->generateDot("p");
+    Graph *t = graph->getVertexInducedSubgraph();
+    t->generateDot("t");
+    t->intersection(p);
     //Fechando arquivo de entrada
     input_file.close();
 

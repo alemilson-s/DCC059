@@ -373,7 +373,7 @@ Graph *Graph::getVertexInducedSubgraph() {
         Node *node = this->getNode(p->getId());
         for (int i = 0; i < number_vertices; i++) {
             Edge *edge = node->getEdge(vet[i]);
-            if (edge != nullptr)
+            if (edge != nullptr && g->containsNode(edge->getTargetId()))
                 p->insertEdge(vet[i], edge->getWeight());
         }
     }
@@ -409,7 +409,8 @@ void Graph::depthSearch() {
 }
 
 void
-Graph::visitNode(int id, int *colors, int time, int accumulated_time, list<int> path, executionPath *execution, int *visits) {
+Graph::stepMetrics(int id, int *colors, int time, int accumulated_time, list<int> path, executionPath *execution,
+                   int *visits) {
     colors[id] = YELLOW;
     Node *p = this->getNodeObjectId(id);
     Edge *t = nullptr;
@@ -430,7 +431,7 @@ Graph::visitNode(int id, int *colors, int time, int accumulated_time, list<int> 
     while (t != nullptr) {
         Node *aux = this->getNode(t->getTargetId());
         if (colors[aux->getObjectId()] == WHITE || visits[aux->getObjectId()] <= p->getInDegree())
-            visitNode(aux->getObjectId(), colors, t->getWeight(), accumulated_time, path, execution, visits);
+            stepMetrics(aux->getObjectId(), colors, t->getWeight(), accumulated_time, path, execution, visits);
         if (colors[aux->getObjectId()] == YELLOW) {
             cout << "Grafo possui ciclo!" << endl;
             exit(55);
@@ -441,7 +442,7 @@ Graph::visitNode(int id, int *colors, int time, int accumulated_time, list<int> 
 
 }
 
-void Graph::closeNetwork() {
+void Graph::pertNetwork() {
     if (!this->directed) {
         cout << "Grafo deve ser direcionado!" << endl;
         return;
@@ -458,7 +459,7 @@ void Graph::closeNetwork() {
     }
     for (int i = 0; i < this->order; i++) {
         if (colors[i] == WHITE) {
-            visitNode(i, colors, time, 0, path, execution, visits);
+            stepMetrics(i, colors, time, 0, path, execution, visits);
         }
     }
     list<int>::iterator it;
@@ -466,7 +467,7 @@ void Graph::closeNetwork() {
         cout << "-> etapa: " << this->getNodeObjectId(*it)->getId() << endl;
     cout << "Duração do projeto: " << execution->weight << endl;
     delete execution;
-    delete []visits;
+    delete[]visits;
 }
 
 int *Graph::getIndirectTransitiveClosure(int id_node) {
@@ -492,16 +493,25 @@ Graph *Graph::intersection(Graph *g) {
         if (g->containsNode(node->getId())) {
             Node *n = p->allocateNode(node->getId(), true);
             n->setWeight(node->getWeight());
-            Edge *t = node->getFirstEdge();
-            while (t != nullptr) {
-                if (node->containsEdge(t->getTargetId())) {
-                    n->insertEdge(t->getTargetId(), t->getWeight());
-                }
-                t = t->getNextEdge();
-            }
         }
         node = node->getNextNode();
     }
+    node = this->getFirstNode();
+    while (node != nullptr) {
+        Node *node_g = g->getNode(node->getId());
+        Edge *t = node->getFirstEdge();
+        while (t != nullptr) {
+            if (node_g != nullptr)
+                if (node_g->containsEdge(t->getTargetId())) {
+                    Node *n = p->getNode(node->getId());
+                    n->insertEdge(t->getTargetId(), t->getWeight());
+                }
+            t = t->getNextEdge();
+        }
+        node = node->getNextNode();
+    }
+
+    p->generateDot("intersection_graph");
     return p;
 }
 

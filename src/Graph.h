@@ -95,9 +95,9 @@ public:
 
     Graph *intersection(Graph *g);
 
-    void closeNetwork();
+    void pertNetwork();
 
-    void visitNode(int id, int *colors, int time, int accumulated_time, list<int> path, executionPath *execution, int *visits);
+    void stepMetrics(int id, int *colors, int time, int accumulated_time, list<int> path, executionPath *execution, int *visits);
 
 private:
     //Auxiliar methods

@@ -408,17 +408,27 @@ void Graph::depthSearch() {
     }
 }
 
-void Graph::visitNode(int id, int *colors, list<int> *executionOrder, int *time) {
+void
+Graph::visitNode(int id, int *colors, int time, int accumulated_time, list<int> path, executionPath *execution, int *visits) {
     colors[id] = YELLOW;
     Node *p = this->getNodeObjectId(id);
+    visits[p->getObjectId()]++;
     Edge *t = nullptr;
     if (p != nullptr)
         t = p->getFirstEdge();
+    accumulated_time += time;
+    path.push_back(id);
+    if (execution->weight < accumulated_time) {
+        execution->weight = accumulated_time;
+        execution->path.clear();
+        list<int>::iterator it;
+        for (it = path.begin(); it != path.end(); it++)
+            execution->path.push_back(*it);
+    }
     while (t != nullptr) {
-        *time += t->getWeight();
         Node *aux = this->getNode(t->getTargetId());
-        if (colors[aux->getObjectId()] == WHITE)
-            visitNode(aux->getObjectId(), colors, executionOrder, time);
+        if (colors[aux->getObjectId()] == WHITE || visits[aux->getObjectId()] <= p->getInDegree())
+            visitNode(aux->getObjectId(), colors, t->getWeight(), accumulated_time, path, execution, visits);
         if (colors[aux->getObjectId()] == YELLOW) {
             cout << "Grafo possui ciclo!" << endl;
             exit(55);
@@ -426,7 +436,7 @@ void Graph::visitNode(int id, int *colors, list<int> *executionOrder, int *time)
         t = t->getNextEdge();
     }
     colors[id] = RED;
-    executionOrder->push_front(id);
+
 }
 
 void Graph::closeNetwork() {
@@ -436,20 +446,23 @@ void Graph::closeNetwork() {
     }
     int time = 0;
     int colors[this->order];
-    list<int> executionOrder;
-
-    for (int i = 0; i < this->order; i++)
+    executionPath *execution = new executionPath;
+    execution->weight = 0;
+    list<int> path;
+    int *visits = new int[this->order];
+    for (int i = 0; i < this->order; i++) {
         colors[i] = WHITE;
+        visits[i] = 0;
+    }
     for (int i = 0; i < this->order; i++) {
         if (colors[i] == WHITE) {
-            visitNode(i, colors, &executionOrder, &time);
+            visitNode(i, colors, time, 0, path, execution, visits);
         }
     }
-
     list<int>::iterator it;
-    for (it = executionOrder.begin(); it != executionOrder.end(); it++)
+    for (it = execution->path.begin(); it != execution->path.end(); it++)
         cout << "-> etapa: " << this->getNodeObjectId(*it)->getId() << endl;
-    cout << "Duração do projeto: " << time << endl;
+    cout << "Duração do projeto: " << execution->weight << endl;
 }
 
 int *Graph::getIndirectTransitiveClosure(int id_node) {

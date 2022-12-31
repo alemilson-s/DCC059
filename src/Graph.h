@@ -95,15 +95,22 @@ public:
 
     Graph *intersection(Graph *g);
 
+    Graph *unionGraph(Graph *g);
+
+    Graph *differenceGraph(Graph *g);
+
     void pertNetwork();
 
-    void stepMetrics(int id, int *colors, int time, int accumulated_time, list<int> path, executionPath *execution, int *visits);
+    void stepMetrics(int id, int *colors, int time, int accumulated_time, list<int> path, executionPath *execution,
+                     int *visits);
+
+    void print();
+
+    Node *allocateNode(int id, bool update_order);
 
 private:
     //Auxiliar methods
     bool containsEdge(int id, int target_id);
-
-    Node *allocateNode(int id, bool update_order);
 
 };
 

@@ -186,6 +186,8 @@ void Graph::insertEdge(int id, int target_id, float weight) {
 
 bool Graph::containsEdge(int id, int target_id) {
     Node *node = this->getNode(id);
+    if (node == nullptr)
+        return false;
     Edge *edge = node->getFirstEdge();
 
     while (edge != nullptr) {
@@ -309,6 +311,7 @@ float *Graph::dijkstra(int id) {
 Graph *Graph::getVertexInducedSubgraph() {
     Graph *g = new Graph(0, this->directed, this->weighted_edge, this->weighted_node);
     int number_vertices, id_vertex, *vet;
+    cout << "Subgrafo Induzido" << endl;
     cout << "Quantidade de vértices: ";
     cin >> number_vertices;
     while (number_vertices > this->order) {
@@ -463,27 +466,17 @@ void Graph::pertNetwork() {
         }
     }
     list<int>::iterator it;
-    for (it = execution->path.begin(); it != execution->path.end(); it++)
-        cout << "-> etapa: " << this->getNodeObjectId(*it)->getId() << endl;
-    cout << "Duração do projeto: " << execution->weight << endl;
+    cout << endl << "Ordem das tarefas:" << endl;
+    list<int>::iterator aux = execution->path.begin();
+    aux++;
+    for (it = execution->path.begin(); aux != execution->path.end(); it++) {
+        cout << "(" << this->getNodeObjectId(*it)->getId() << ", " << this->getNodeObjectId(*aux)->getId() << ")"
+             << endl;
+        aux++;
+    }
+    cout << "Duração do projeto: " << execution->weight << endl << endl;
     delete execution;
     delete[]visits;
-}
-
-int *Graph::getIndirectTransitiveClosure(int id_node) {
-    Node *node = this->getFirstNode();
-    int *vet = new int[this->order], i;
-    for (i = 0; i < this->order; i++)
-        vet[i] = -1;
-    i = 0;
-    while (node != nullptr) {
-        if (node->containsEdge(id_node)) {
-            vet[i] = node->getId();
-            i++;
-        }
-        node = node->getNextNode();
-    }
-    return vet;
 }
 
 Graph *Graph::intersection(Graph *g) {
@@ -512,6 +505,89 @@ Graph *Graph::intersection(Graph *g) {
     }
 
     p->generateDot("intersection_graph");
+    cout << endl << "Grafo Interseção: " << endl;
+    this->print();
+    return p;
+}
+
+Graph *Graph::unionGraph(Graph *g) {
+    Graph *p = new Graph(0, this->directed, this->weighted_edge, this->weighted_node);
+    Node *node = this->getFirstNode();
+    while (node != nullptr) {
+        p->insertNode(node->getId(), true);
+        node = node->getNextNode();
+    }
+    node = this->getFirstNode();
+    while (node != nullptr) {
+        Edge *edge = node->getFirstEdge();
+        while (edge != nullptr) {
+            if (!p->containsEdge(node->getId(), edge->getTargetId())) {
+                p->insertEdge(node->getId(), edge->getTargetId(), edge->getWeight());
+            }
+            edge = edge->getNextEdge();
+        }
+        node = node->getNextNode();
+    }
+
+    node = g->getFirstNode();
+    while (node != nullptr) {
+        if (!p->containsNode(node->getId()))
+            p->insertNode(node->getId(), true);
+        node = node->getNextNode();
+    }
+
+    node = g->getFirstNode();
+    while (node != nullptr) {
+        Edge *edge = node->getFirstEdge();
+        while (edge != nullptr) {
+            if (!p->containsEdge(node->getId(), edge->getTargetId())) {
+                p->insertEdge(node->getId(), edge->getTargetId(), edge->getWeight());
+            }
+            edge = edge->getNextEdge();
+        }
+        node = node->getNextNode();
+    }
+    p->generateDot("union_graph");
+    cout << endl << "Grafo União: " << endl;
+    this->print();
+    return p;
+}
+
+Graph *Graph::differenceGraph(Graph *g) {
+    Graph *p = new Graph(0, this->directed, this->weighted_edge, this->weighted_node);
+
+    Node *node = g->getFirstNode();
+    while (node != nullptr) {
+        Edge *edge = node->getFirstEdge();
+        while (edge != nullptr) {
+            if (!this->containsEdge(node->getId(), edge->getTargetId())) {
+                cout << "As arestas de G2 devem estar contidas em G1!" << endl;
+                return nullptr;
+            }
+            edge = edge->getNextEdge();
+        }
+        node = node->getNextNode();
+    }
+
+    node = this->getFirstNode();
+    while (node != nullptr) {
+        p->insertNode(node->getId(), true);
+        node = node->getNextNode();
+    }
+    node = this->getFirstNode();
+    while (node != nullptr) {
+        Edge *edge = node->getFirstEdge();
+        while (edge != nullptr) {
+            if (!g->containsEdge(node->getId(), edge->getTargetId())) {
+                p->insertEdge(node->getId(), edge->getTargetId(), edge->getWeight());
+            }
+            edge = edge->getNextEdge();
+        }
+        node = node->getNextNode();
+    }
+    p->generateDot("difference_graph");
+    cout << endl << "Grafo Diferença: " << endl;
+    this->print();
     return p;
 }
 
@@ -583,4 +659,19 @@ void Graph::generateDot(string name_graph) {
     } else {
         cout << "An error occurred while trying to open the file!" << endl << "generateDot()" << endl;
     }
+}
+
+void Graph::print() {
+    Node *node = this->getFirstNode();
+    while (node != nullptr) {
+        cout << "\tNode id: " << node->getId() << endl;
+        cout << "\tEdges:" << endl;
+        Edge *edge = node->getFirstEdge();
+        while (edge != nullptr) {
+            cout << "\t\t(" << node->getId() << ", " << edge->getTargetId() << ")" << endl;
+            edge = edge->getNextEdge();
+        }
+        node = node->getNextNode();
+    }
+    cout << endl;
 }

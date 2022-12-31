@@ -9,6 +9,7 @@
 #include <fstream>
 #include <stack>
 #include <list>
+#include <vector>
 
 typedef struct {
     float weight;
@@ -107,6 +108,10 @@ public:
     void print();
 
     Node *allocateNode(int id, bool update_order);
+
+    void greedyConstructiveAlgorithm();
+
+    void atualizaLista(vector<int> *lista_candidatos, int *degrees);
 
 private:
     //Auxiliar methods

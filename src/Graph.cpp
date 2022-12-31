@@ -172,7 +172,7 @@ void Graph::insertEdge(int id, int target_id, float weight) {
         node->incrementOutDegree();
         target_node->incrementInDegree();
     } else {
-        if (!node->containsEdge(id)) {
+        if (!node->containsEdge(target_id)) {
             node->insertEdge(target_id, weight);
             target_node->insertEdge(id, weight);
             node->incrementOutDegree();
@@ -639,7 +639,6 @@ void Graph::generateDot(string name_graph) {
             output_file << "}";
         }
         cout << "Arquivo " << path << " gerado!" << endl;
-        /*
         name_graph.append("_graph.png");
 
         string command = "dot -Tpng ";
@@ -653,7 +652,6 @@ void Graph::generateDot(string name_graph) {
 
             exit(1);
         }
-         */
         output_file.close();
 
     } else {
@@ -674,4 +672,104 @@ void Graph::print() {
         node = node->getNextNode();
     }
     cout << endl;
+}
+
+void merge(vector<int> *nodes, double *f, int *auxNodes, double *auxF, int l, int m, int r) {
+    int i = l;
+    int j = m + 1;
+    int k = 0;
+    while (i <= m && j <= r) {
+        if (f[j] >= f[i]) {
+            auxNodes[k] = (*nodes)[i];
+            auxF[k] = f[i];
+            i++;
+        } else {
+            auxNodes[k] = (*nodes)[j];
+            auxF[k] = f[j];
+            j++;
+        }
+        k++;
+    }
+
+    while (i <= m) {
+        auxNodes[k] = (*nodes)[i];
+        auxF[k] = f[i];
+        i++;
+        k++;
+    }
+
+    while (j <= r) {
+        auxNodes[k] = (*nodes)[j];
+        auxF[k] = f[j];
+        j++;
+        k++;
+    }
+
+    for (i = l; i <= r; i++) {
+        (*nodes)[i] = auxNodes[i - l];
+        f[i] = auxF[i - l];
+    }
+}
+
+void mergeSort(vector<int> *nodes, double *f, int *auxNodes, double *auxF, int first, int last) {
+    if (first < last) {
+        int mid = (first + last) / 2;
+        mergeSort(nodes, f, auxNodes, auxF, first, mid);
+        mergeSort(nodes, f, auxNodes, auxF, mid + 1, last);
+        merge(nodes, f, auxNodes, auxF, first, mid, last);
+    }
+}
+
+void Graph::atualizaLista(vector<int> *lista_candidatos, int *degrees) {
+    Node *node = this->getNode((*lista_candidatos)[0]);
+    cout << node -> getId() << endl;
+
+    lista_candidatos->erase(lista_candidatos->begin());
+    Edge *edge = node->getFirstEdge();
+    while (edge != nullptr) {
+        degrees[edge->getTargetId()]--;
+        cout << edge->getTargetId() << endl;
+        edge = edge->getNextEdge();
+    }
+    for (int i = 0; i < lista_candidatos->size(); i++) {
+        if (degrees[(*lista_candidatos)[i]] == 0) {
+            lista_candidatos->erase(lista_candidatos->begin() + i);
+        }
+    }
+    for (int i = 0; i < this->order; i++) {
+        cout << i << ":"<< degrees[i] << " ";
+    }
+    cout << endl;
+}
+
+void Graph::greedyConstructiveAlgorithm() {
+    int weights[this->order];
+    int degrees[this->order];
+    double f[this->order];
+    int auxNodes[this->order];
+    double auxF[this->order];
+    vector<int> lista_candidatos;
+    vector<int> solucao;
+    for (int i = 0; i < this->order; i++) {
+        Node *node = this->getNode(i);
+        weights[i] = node->getWeight();
+        degrees[i] = node->getInDegree();
+    }
+    for (int i = 0; i < this->order; i++) {
+        f[i] = (weights[i] * 7) / ((degrees[i] + 1) * 3);
+        lista_candidatos.push_back(i);
+    }
+    mergeSort(&lista_candidatos, f, auxNodes, auxF, 0, this->order - 1);
+    while (lista_candidatos.size() > 0) {
+        solucao.push_back(lista_candidatos[0]);
+        atualizaLista(&lista_candidatos, degrees);
+    }
+    float soma = 0;
+    for (int i = 0; i < solucao.size(); i++) {
+        Node *node = this->getNode(solucao[i]);
+        cout << solucao[i] << endl;
+        soma += node->getWeight();
+    }
+    cout << soma << endl;
+    this->generateDot("a");
 }

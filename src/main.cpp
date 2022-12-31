@@ -111,8 +111,7 @@ leituraInstanciaSubconjuntoDominantePonderado(ifstream &input_file, int directed
         int j = 0;
         while (j < graph->getOrder() && input_file >> idNodeTarget) {
             if (i != j && idNodeTarget == 1) {
-                Node *node = graph->getNode(i);
-                node->insertEdge(j, 0);
+                graph->insertEdge(i, j, 0);
             }
             j++;
         }
@@ -144,7 +143,7 @@ void selecionar(int selecao, Graph *graph, ofstream &output_file) {
 
     switch (selecao) {
 
-            //Interseção
+        //Interseção
         case 1: {
             cout << "Vértices para grafo G1: " << endl;
             Graph *g1 = graph->getVertexInducedSubgraph();
@@ -182,7 +181,7 @@ void selecionar(int selecao, Graph *graph, ofstream &output_file) {
             break;
         }
 
-            //Componentes Fortementes Conexas
+
         case 5: {
 
             break;
@@ -277,8 +276,8 @@ int main(int argc, char const *argv[]) {
     } else
         cout << "Unable to open " << argv[1];
 
-
-    mainMenu(output_file, graph);
+    graph->greedyConstructiveAlgorithm();
+//    mainMenu(output_file, graph);
 
 //    graph->generateDot("g");
 //    graph->pertNetwork();

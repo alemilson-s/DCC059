@@ -16,6 +16,18 @@ typedef struct {
     list<int> path;
 } executionPath;
 
+typedef struct {
+    float soma;
+    float qtd_solucoes;
+    float media;
+} media;
+
+typedef struct {
+    vector<int> solucao;
+    float valor_solucao;
+} solucao;
+
+
 using namespace std;
 
 class Graph {
@@ -109,9 +121,27 @@ public:
 
     Node *allocateNode(int id, bool update_order);
 
-    void greedyConstructiveAlgorithm();
+    void greedyConstructiveAlgorithm(ofstream &output_file);
 
-    void atualizaLista(vector<int> *lista_candidatos, int *degrees);
+    solucao *adaptiveRandomizedGreedyAlgorithm(float alpha, int numero_iteracoes, ofstream &output_file,
+                                               bool gravar_solucao = true);
+
+    void atualizaLista(vector<int> *lista_candidatos, int *degrees, int ind, int tam);
+
+    void inicializaF(double *f, int *weights, int tam);
+
+    void reactiveRandomizedGreedyConstructiveAlgorithm(vector<float> alphas, int numero_iteracoes, int bloco,
+                                                       int tam, ofstream &output_file);
+
+    void inicializaVetores(vector<float> &p, vector<media> &m, vector<solucao> &best_solutions, int tam);
+
+    void atualizaProbabilidades(vector<float> &p, vector<media> &m, vector<solucao> &best_solutions);
+
+    int escolheAlfa(vector<float> &p, vector<float> &a);
+
+    bool isNotCovered(solucao &s, int &id_node);
+
+    void atualizaMedias(vector<media> &medias, float valor_solucao, int index_alpha);
 
 private:
     //Auxiliar methods

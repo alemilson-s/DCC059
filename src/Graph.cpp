@@ -11,6 +11,16 @@
 #include <ctime>
 #include <float.h>
 #include <iomanip>
+#include "random.h"
+#include "types.h"
+#include <math.h>
+#include <random>
+#include <chrono>
+
+
+using namespace std::chrono;
+
+using namespace std;
 
 #define WHITE 0
 #define YELLOW 1
@@ -679,7 +689,7 @@ void merge(vector<int> *nodes, double *f, int *auxNodes, double *auxF, int l, in
     int j = m + 1;
     int k = 0;
     while (i <= m && j <= r) {
-        if (f[j] >= f[i]) {
+        if (f[j] <= f[i]) {
             auxNodes[k] = (*nodes)[i];
             auxF[k] = f[i];
             i++;
@@ -720,29 +730,80 @@ void mergeSort(vector<int> *nodes, double *f, int *auxNodes, double *auxF, int f
     }
 }
 
-void Graph::atualizaLista(vector<int> *lista_candidatos, int *degrees) {
-    Node *node = this->getNode((*lista_candidatos)[0]);
-    cout << node -> getId() << endl;
+bool Graph::isNotCovered(solucao &s, int &id_node) {
+    bool coberto = false;
+    bool adjacentes_coberto = true;
+    for (int i = 0; i < s.solucao.size(); i++) {
+        Node *node = this->getNode(s.solucao[i]);
+        if (node->containsEdge(id_node)) {
+            coberto = true;
+            break;
+        }
+    }
+    Node *node = this->getNode(id_node);
+    Edge *edge = node->getFirstEdge();
+    while (edge != nullptr) {
+        for (int i = 0; i < s.solucao.size(); i++) {
+            Node *n = this->getNode(s.solucao[i]);
+            if (!n->containsEdge(edge->getTargetId())) {
+                adjacentes_coberto = false;
+                break;
+            }
+        }
+        if (!adjacentes_coberto)
+            break;
+        edge = edge->getNextEdge();
+    }
+    if (coberto && adjacentes_coberto)
+        return true;
+    else
+        return false;
+}
 
-    lista_candidatos->erase(lista_candidatos->begin());
+void Graph::atualizaLista(vector<int> *lista_candidatos, int *degrees, int ind, int tam) {
+    Node *node = this->getNode((*lista_candidatos)[ind]);
+
+    lista_candidatos->erase(lista_candidatos->begin() + ind);
     Edge *edge = node->getFirstEdge();
     while (edge != nullptr) {
         degrees[edge->getTargetId()]--;
-        cout << edge->getTargetId() << endl;
         edge = edge->getNextEdge();
     }
-    for (int i = 0; i < lista_candidatos->size(); i++) {
-        if (degrees[(*lista_candidatos)[i]] == 0) {
-            lista_candidatos->erase(lista_candidatos->begin() + i);
+    for (int i = 0; i < tam; i++) {
+        if (degrees[i] == 0) {
+            for (int j = 0; j < lista_candidatos->size(); j++) {
+                if ((*lista_candidatos)[j] == i)
+                    lista_candidatos->erase(lista_candidatos->begin() + j);
+            }
+            degrees[i] = -1;
+            i--;
         }
     }
-    for (int i = 0; i < this->order; i++) {
-        cout << i << ":"<< degrees[i] << " ";
-    }
-    cout << endl;
+
 }
 
-void Graph::greedyConstructiveAlgorithm() {
+void Graph::inicializaF(double *f, int *weights, int tam) {
+    Node *node;
+    Edge *edge;
+    for (int i = 0; i < tam; i++) {
+        f[i] = 0;
+        node = this->getNode(i);
+        f[i] += node->getWeight();
+        edge = node->getFirstEdge();
+        float peso;
+        while (edge != nullptr) {
+            peso = this->getNode(edge->getTargetId())->getWeight();
+            f[i] += peso;
+            edge = edge->getNextEdge();
+        }
+        f[i] = (f[i] / node->getInDegree()) / ((weights[i]));
+    }
+}
+
+void Graph::greedyConstructiveAlgorithm(ofstream &output_file) {
+    output_file << "ALGORITMO CONSTRUTIVO GULOSO" << endl;
+    cout << "ALGORITMO CONSTRUTIVO GULOSO" << endl;
+    high_resolution_clock::time_point start = high_resolution_clock::now();
     int weights[this->order];
     int degrees[this->order];
     double f[this->order];
@@ -755,21 +816,230 @@ void Graph::greedyConstructiveAlgorithm() {
         weights[i] = node->getWeight();
         degrees[i] = node->getInDegree();
     }
+    inicializaF(f, weights, this->order);
     for (int i = 0; i < this->order; i++) {
-        f[i] = (weights[i] * 7) / ((degrees[i] + 1) * 3);
-        lista_candidatos.push_back(i);
+        Node *p = this->getNode(i);
+        if (p->getInDegree() == 0) {
+            solucao.push_back(i);
+        } else
+            lista_candidatos.push_back(i);
     }
     mergeSort(&lista_candidatos, f, auxNodes, auxF, 0, this->order - 1);
     while (lista_candidatos.size() > 0) {
         solucao.push_back(lista_candidatos[0]);
-        atualizaLista(&lista_candidatos, degrees);
+        atualizaLista(&lista_candidatos, degrees, 0, this->order);
     }
-    float soma = 0;
+    float qualidade_solucao = 0;
+    output_file << "Solução:" << endl;
     for (int i = 0; i < solucao.size(); i++) {
         Node *node = this->getNode(solucao[i]);
-        cout << solucao[i] << endl;
-        soma += node->getWeight();
+        output_file << "\t" << solucao[i] << endl;
+        qualidade_solucao += node->getWeight();
     }
-    cout << soma << endl;
-    this->generateDot("a");
+
+    output_file << "Qualidade final da solução: " << qualidade_solucao << endl;
+    high_resolution_clock::time_point end = high_resolution_clock::now();
+    output_file << "Tempo de processamento: " << duration_cast<chrono::milliseconds>(end - start).count()
+                << " milliseconds"
+                << endl;
+
+    cout << "Qualidade final da solução: " << qualidade_solucao << endl;
+    cout << "Tempo de processamento: " << duration_cast<chrono::milliseconds>(end - start).count() << " milliseconds"
+         << endl;
+    cout << "Solução viável" << endl << endl;
+}
+
+solucao *Graph::adaptiveRandomizedGreedyAlgorithm(float alpha, int numero_iteracoes, ofstream &output_file,
+                                                  bool gravar_solucao) {
+    high_resolution_clock::time_point start = high_resolution_clock::now();
+    if (gravar_solucao) {
+        output_file << "ALGORITMO CONSTRUTIVO GULOSO RANDOMIZADO E ADAPTATIVO" << endl;
+        cout << "ALGORITMO CONSTRUTIVO GULOSO RANDOMIZADO E ADAPTATIVO" << endl;
+    }
+    solucao *best = new solucao;
+    best->valor_solucao = 0;
+    for (Node *node = this->getFirstNode(); node != nullptr; node = node->getNextNode())
+        best->valor_solucao += node->getWeight();
+    int j = 0;
+    ULONG k;
+    while (j < numero_iteracoes) {
+        j++;
+        int weights[this->order];
+        int degrees[this->order];
+        double f[this->order];
+        int auxNodes[this->order];
+        double auxF[this->order];
+        vector<int> lista_candidatos;
+        solucao *s = new solucao;
+        s->valor_solucao = 0;
+        for (int i = 0; i < this->order; i++) {
+            Node *node = this->getNode(i);
+            weights[i] = node->getWeight();
+            degrees[i] = node->getInDegree();
+        }
+
+        for (int i = 0; i < this->order; i++) {
+            Node *p = this->getNode(i);
+            if (p->getInDegree() == 0) {
+                s->solucao.push_back(i);
+            } else
+                lista_candidatos.push_back(i);
+        }
+        inicializaF(f, weights, this->order);
+        mergeSort(&lista_candidatos, f, auxNodes, auxF, 0, this->order - 1);
+        do {
+            srand(time(nullptr));
+            int aux = alpha * (lista_candidatos.size() - 1);
+            if (aux == 0)
+                k = 0;
+            else
+                k = rand() % aux;
+            if (!isNotCovered(*s, lista_candidatos[k]) && degrees[lista_candidatos[k]] > 0)
+                s->solucao.push_back(lista_candidatos[k]);
+            atualizaLista(&lista_candidatos, degrees, k, this->order);
+        } while (lista_candidatos.size() > 0);
+        for (int i = 0; i < s->solucao.size(); i++) {
+            Node *node = this->getNode(s->solucao[i]);
+            s->valor_solucao += node->getWeight();
+        }
+        if (s->valor_solucao < best->valor_solucao) {
+            solucao *aux = best;
+            best = s;
+            delete aux;
+        } else {
+            delete s;
+        }
+    }
+    float qualidade_solucao = 0;
+    if (gravar_solucao) { output_file << "Solução(semente de randomização - " << alpha << "):" << endl; }
+    for (int i = 0; i < best->solucao.size(); i++) {
+        Node *node = this->getNode(best->solucao[i]);
+        if (gravar_solucao)
+            output_file << "\t" << best->solucao[i] << endl;
+        qualidade_solucao += node->getWeight();
+    }
+    if (gravar_solucao)
+        output_file << "Qualidade final da solução: " << qualidade_solucao << endl;
+    high_resolution_clock::time_point end = high_resolution_clock::now();
+    if (gravar_solucao)
+        output_file << "Tempo de processamento: " << duration_cast<chrono::milliseconds>(end - start).count()
+                    << " milliseconds"
+                    << endl;
+    if (gravar_solucao) {
+        cout << "Semente de randomização: " << alpha << endl;
+        cout << "Qualidade final da solução: " << qualidade_solucao << endl;
+        cout << "Tempo de processamento: " << duration_cast<chrono::milliseconds>(end - start).count()
+             << " milliseconds" << endl;
+        cout << "Solução viável" << endl << endl;
+    }
+    return best;
+}
+
+void Graph::inicializaVetores(vector<float> &p, vector<media> &m, vector<solucao> &best_solutions, int tam) {
+    media aux_medias{0, 0, 1};
+    int qtd_alfas = tam;
+    solucao *aux_solucao = new solucao;
+    float aux_probabilidades = 1.0f / qtd_alfas;
+    float valor_melhor_solucao = 0;
+    for (Node *node = this->getFirstNode(); node != nullptr; node = node->getNextNode()) {
+        aux_solucao->solucao.push_back(node->getId());
+        valor_melhor_solucao += node->getWeight();
+    }
+    aux_solucao->valor_solucao = valor_melhor_solucao;
+    for (int i = 0; i < qtd_alfas; i++) {
+        best_solutions.push_back(*aux_solucao);
+        p.push_back(aux_probabilidades);
+        m.push_back(aux_medias);
+    }
+
+}
+
+void Graph::atualizaProbabilidades(vector<float> &p, vector<media> &m, vector<solucao> &best_solutions) {
+    long double q[p.size()];
+    long double qualidade_melhor_solucao = best_solutions[0].valor_solucao, soma = 0;
+    for (int i = 1; i < best_solutions.size(); i++) {
+        if (best_solutions[i].valor_solucao < qualidade_melhor_solucao)
+            qualidade_melhor_solucao = best_solutions[i].valor_solucao;
+    }
+
+    for (int i = 0; i < p.size(); i++) {
+        q[i] = pow(qualidade_melhor_solucao / m[i].media, 100);
+        soma += q[i];
+    }
+    for (int i = 0; i < p.size(); i++) {
+        p[i] = q[i] / soma;
+    }
+}
+
+int Graph::escolheAlfa(vector<float> &p, vector<float> &a) {
+    float aux[p.size()];
+    for (int i = 0; i < p.size(); i++) {
+        aux[i] = p[i] * 1000;
+    }
+    float t = 0;
+    int r = rand() % 1001;
+    for (int i = 0; i < p.size(); i++) {
+        t += aux[i];
+        if (t >= r)
+            return i;
+    }
+    return 0;
+}
+
+
+void Graph::atualizaMedias(vector<media> &medias, float valor_solucao, int index_alpha) {
+    medias[index_alpha].soma += valor_solucao;
+    medias[index_alpha].qtd_solucoes++;
+    medias[index_alpha].media = medias[index_alpha].soma / medias[index_alpha].qtd_solucoes;
+}
+
+void Graph::reactiveRandomizedGreedyConstructiveAlgorithm(vector<float> alphas, int numero_iteracoes, int bloco,
+                                                          int tam, ofstream &output_file) {
+    high_resolution_clock::time_point start = high_resolution_clock::now();
+    output_file << "ALGORITMO CONSTRUTIVO GULOSO RANDOMIZADO REATIVO" << endl;
+    cout << "ALGORITMO CONSTRUTIVO GULOSO RANDOMIZADO REATIVO" << endl;
+    vector<solucao> best_solutions;
+    solucao *solution;
+    int j = 0;
+    int index_best_alpha = 0;
+    vector<float> probabilidades;
+    vector<media> medias;
+
+    inicializaVetores(probabilidades, medias, best_solutions, tam);
+    while (j < numero_iteracoes) {
+        if (j % bloco == 0)
+            atualizaProbabilidades(probabilidades, medias, best_solutions);
+        j++;
+        int index_alpha = escolheAlfa(probabilidades, alphas);
+        solution = this->adaptiveRandomizedGreedyAlgorithm(alphas[index_alpha], 1, output_file, false);
+        atualizaMedias(medias, solution->valor_solucao, index_alpha);
+        if (solution->valor_solucao < best_solutions[index_alpha].valor_solucao) {
+            solucao *s = solution;
+            best_solutions[index_alpha] = *solution;
+            delete s;
+        } else {
+            delete solution;
+        }
+    }
+    high_resolution_clock::time_point end = high_resolution_clock::now();
+    float best_alpha = alphas[0];
+    for (int i = 0; i < alphas.size(); i++) {
+        if (best_solutions[i].valor_solucao < best_solutions[index_best_alpha].valor_solucao) {
+            index_best_alpha = i;
+        }
+    }
+    output_file << "Alfa: " << alphas[index_best_alpha] << endl;
+    output_file << "Solução(semente de randomização - " << alphas[index_best_alpha] << "):" << endl;
+    for (int i = 0; i < best_solutions[index_best_alpha].solucao.size(); i++) {
+        Node *p = this->getNode(best_solutions[index_best_alpha].solucao[i]);
+        output_file << "\t" << p->getId() << endl;
+    }
+    output_file << "Qualidade final da solução: " << best_solutions[index_best_alpha].valor_solucao << endl;
+    output_file << "Tempo de processamento: " << duration_cast<chrono::seconds>(end - start).count() << " seconds"
+                << endl;
+    cout << "Semente de randomização: " << alphas[index_best_alpha] << endl;
+    cout << "Qualidade final da solução: " << best_solutions[index_best_alpha].valor_solucao << endl;
+    cout << "Tempo de processamento: " << duration_cast<chrono::seconds>(end - start).count() << " seconds" << endl;
+    cout << "Solução viável" << endl << endl;
+
 }

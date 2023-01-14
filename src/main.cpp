@@ -9,6 +9,7 @@
 #include <chrono>
 #include "Graph.h"
 #include "Node.h"
+#include "random.h"
 
 using namespace std;
 
@@ -183,38 +184,35 @@ void selecionar(int selecao, Graph *graph, ofstream &output_file) {
 
 
         case 5: {
-
+            cout << "Algoritmos Gulosos:" << endl;
+            cout << "[1] Algoritmo construtivo guloso" << endl;
+            cout << "[2] Algoritmo construtivo guloso randomizado e adaptativo" << endl;
+            cout << "[3] Algoritmo construtivo guloso randomizado reativo" << endl;
+            int selecao_sub;
+            cin >> selecao_sub;
+            if (selecao_sub == 1) {
+                graph->greedyConstructiveAlgorithm(output_file);
+            } else if (selecao_sub == 2) {
+                float alpha;
+                int qtd_iteracoes;
+                cout << "Valor de alfa: ";
+                cin >> alpha;
+                cout << "Quantidade de iterações: ";
+                cin >> qtd_iteracoes;
+                graph->adaptiveRandomizedGreedyAlgorithm(alpha, qtd_iteracoes, output_file,
+                                                         true);
+            } else if (selecao_sub == 3) {
+                vector<float> alphas = {0.05, 0.10, 0.15, 0.30, 0.50};
+                int qtd_iteracoes;
+                int tam_bloco;
+                cout << "Quantidade de iterações: ";
+                cin >> qtd_iteracoes;
+                cout << "Tamanho do bloco: ";
+                cin >> tam_bloco;
+                graph->reactiveRandomizedGreedyConstructiveAlgorithm(alphas, qtd_iteracoes,
+                                                                     tam_bloco, 5, output_file);
+            }
             break;
-        }
-
-            //Ordenação Topológica
-        case 6: {
-
-            break;
-        }
-
-        case 7: {
-
-            break;
-        }
-
-            //Algoritmo de Prim
-        case 8: {
-
-            break;
-        }
-
-            //Algoritmo de Dijkstra
-        case 9: {
-
-            break;
-        }
-
-            //Algoritmo de Floyd
-        case 10: {
-
-            break;
-
         }
 
     }
@@ -265,6 +263,7 @@ int main(int argc, char const *argv[]) {
     input_file.open(argv[1], ios::in);
     output_file.open(argv[2], ios::out | ios::trunc);
 
+    output_file << argv[1] << endl;
 
     Graph *graph;
 
@@ -276,18 +275,27 @@ int main(int argc, char const *argv[]) {
     } else
         cout << "Unable to open " << argv[1];
 
-    graph->greedyConstructiveAlgorithm();
-//    mainMenu(output_file, graph);
+//    graph->greedyConstructiveAlgorithm(output_file);
 
-//    graph->generateDot("g");
-//    graph->pertNetwork();
-//    Graph *p = graph->getVertexInducedSubgraph();
-//    p->generateDot("p");
-//    Graph *t = graph->getVertexInducedSubgraph();
-//    t->generateDot("t");
-//    t->intersection(p);
-//    t->unionGraph(p);
-//    p->differenceGraph(t);
+//    vector<float> alphas1 = {0.15, 0.30, 0.50};
+//    for (int i = 0; i < alphas1.size(); i++) {
+//        for (int j = 0; j < 10; j++) {
+//            solucao *s = graph->adaptiveRandomizedGreedyAlgorithm(alphas1[i], 1000, output_file, true);
+//            delete s;
+//        }
+//    }
+
+//    vector<float> alphas2 = {0.05, 0.10, 0.15, 0.30, 0.50};
+//    int iteracoes = 3500;
+//    int tam_bloco = 250;
+//    for (int i = 0; i < 10; i++) {
+//        graph->reactiveRandomizedGreedyConstructiveAlgorithm(alphas2, iteracoes,
+//                                                             tam_bloco, 5, output_file);
+//
+//    }
+
+    mainMenu(output_file, graph);
+
     //Fechando arquivo de entrada
     input_file.close();
 

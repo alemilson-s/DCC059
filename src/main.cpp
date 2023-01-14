@@ -179,6 +179,7 @@ void selecionar(int selecao, Graph *graph, ofstream &output_file) {
             char r;
             cout << "Obter subgrafo?" << endl;
             cout << "(S ou s) para sim" << endl;
+            cout << "R: ";
             cin >> r;
             if (r == 'S' || r == 's') {
                 cout << "Vértices para grafo acíclico direcionado: " << endl;

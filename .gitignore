@@ -1,7 +1,5 @@
 *.dot
 *.png
-input_files/*
-output_files/*
 .idea/*
 *.txt
 cmake-build-debug

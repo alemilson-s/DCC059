@@ -649,19 +649,19 @@ void Graph::generateDot(string name_graph) {
             output_file << "}";
         }
         cout << "Arquivo " << path << " gerado!" << endl;
-        name_graph.append("_graph.png");
-
-        string command = "dot -Tpng ";
-        command.append(path.append(" -o ../output_files/").append(name_graph));
-
-        char *c = const_cast<char *>(command.c_str());
-
-        if (!(c = reinterpret_cast<char *>((FILE *) popen(c, "r")))) {
-
-            cout << "falha";
-
-            exit(1);
-        }
+//        name_graph.append("_graph.png");
+//
+//        string command = "dot -Tpng ";
+//        command.append(path.append(" -o ../output_files/").append(name_graph));
+//
+//        char *c = const_cast<char *>(command.c_str());
+//
+//        if (!(c = reinterpret_cast<char *>((FILE *) popen(c, "r")))) {
+//
+//            cout << "falha";
+//
+//            exit(1);
+//        }
         output_file.close();
 
     } else {
@@ -935,7 +935,7 @@ solucao *Graph::adaptiveRandomizedGreedyAlgorithm(float alpha, int numero_iterac
     return best;
 }
 
-void Graph::inicializaVetores(vector<float> &p, vector<media> &m, vector<solucao> &best_solutions, int tam) {
+void Graph::inicializaVetores(vector<float> &p, vector <media> &m, vector <solucao> &best_solutions, int tam) {
     media aux_medias{0, 0, 1};
     int qtd_alfas = tam;
     solucao *aux_solucao = new solucao;
@@ -954,7 +954,7 @@ void Graph::inicializaVetores(vector<float> &p, vector<media> &m, vector<solucao
 
 }
 
-void Graph::atualizaProbabilidades(vector<float> &p, vector<media> &m, vector<solucao> &best_solutions) {
+void Graph::atualizaProbabilidades(vector<float> &p, vector <media> &m, vector <solucao> &best_solutions) {
     long double q[p.size()];
     long double qualidade_melhor_solucao = best_solutions[0].valor_solucao, soma = 0;
     for (int i = 1; i < best_solutions.size(); i++) {
@@ -987,7 +987,7 @@ int Graph::escolheAlfa(vector<float> &p, vector<float> &a) {
 }
 
 
-void Graph::atualizaMedias(vector<media> &medias, float valor_solucao, int index_alpha) {
+void Graph::atualizaMedias(vector <media> &medias, float valor_solucao, int index_alpha) {
     medias[index_alpha].soma += valor_solucao;
     medias[index_alpha].qtd_solucoes++;
     medias[index_alpha].media = medias[index_alpha].soma / medias[index_alpha].qtd_solucoes;
@@ -998,12 +998,12 @@ void Graph::reactiveRandomizedGreedyConstructiveAlgorithm(vector<float> alphas, 
     high_resolution_clock::time_point start = high_resolution_clock::now();
     output_file << "ALGORITMO CONSTRUTIVO GULOSO RANDOMIZADO REATIVO" << endl;
     cout << "ALGORITMO CONSTRUTIVO GULOSO RANDOMIZADO REATIVO" << endl;
-    vector<solucao> best_solutions;
+    vector <solucao> best_solutions;
     solucao *solution;
     int j = 0;
     int index_best_alpha = 0;
     vector<float> probabilidades;
-    vector<media> medias;
+    vector <media> medias;
 
     inicializaVetores(probabilidades, medias, best_solutions, tam);
     while (j < numero_iteracoes) {

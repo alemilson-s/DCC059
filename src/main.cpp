@@ -176,9 +176,16 @@ void selecionar(int selecao, Graph *graph, ofstream &output_file) {
 
             //Rede Pert
         case 4: {
-            cout << "Vértices para grafo acíclico direcionado: " << endl;
-            Graph *g1 = graph->getVertexInducedSubgraph();
-            g1->pertNetwork();
+            char r;
+            cout << "Obter subgrafo?" << endl;
+            cout << "(S ou s) para sim" << endl;
+            cin >> r;
+            if (r == 'S' || r == 's') {
+                cout << "Vértices para grafo acíclico direcionado: " << endl;
+                Graph *g1 = graph->getVertexInducedSubgraph();
+                g1->pertNetwork();
+            } else
+                graph->pertNetwork();
             break;
         }
 
@@ -223,9 +230,9 @@ int mainMenu(ofstream &output_file, Graph *graph) {
     int selecao = 1;
 
     while (selecao != 0) {
-        system("clear");
-        selecao = menu();
 
+        selecao = menu();
+        system("clear");
         if (output_file.is_open())
             selecionar(selecao, graph, output_file);
 
